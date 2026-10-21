@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>📚 Library Management System</h1>
+    <p>Manage your books easily</p>
+</header>
+
+<main>
+    <section class="dashboard">
+    <div class="stat-card total">
+        <h3>📚 Total Books</h3>
+        <p>{{ total_books }}</p>
+    </div>
+
+    <div class="stat-card available">
+        <h3>📗 Available Books</h3>
+        <p>{{ available_books }}</p>
+    </div>
+
+    <div class="stat-card issued">
+        <h3>📕 Issued Books</h3>
+        <p>{{ issued_books }}</p>
+    </div>
+</section>
+    <section class="card">
+        <h2>Add a New Book</h2>
+
+        <form action="/add" method="POST">
+            <label for="bookName">Book Name</label>
+            <input type="text" id="bookName" name="name"
+                   placeholder="Enter book name" required>
+
+            <label for="author">Author Name</label>
+            <input type="text" id="author" name="author"
+                   placeholder="Enter author name" required>
+
+            <button type="submit">Add Book</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>📗 Available Books</h2>
+
+        <input type="text" id="searchAvailable"
+               placeholder="Search available books...">
+
+        <ul id="availableList">
+            {% for book in books %}
+                {% if book['status'] == 'Available' %}
+                <li>
+                    <strong>{{ book['name'] }}</strong>
+                    — {{ book['author'] }}
+
+                    <p>Status: Available</p>
+
+                    <form action="/issue/{{ book['id'] }}" method="POST">
+                        <input
+                            type="text"
+                            name="student_name"
+                            placeholder="Student name"
+                            required
+                        >
+                        <button type="submit">Issue Book</button>
+                    </form>
+
+                    <form action="/delete/{{ book['id'] }}"
+                          method="POST" style="display:inline;">
+                        <button type="submit">Delete</button>
+                    </form>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+
+        <p id="noAvailable" style="display:none;">
+            No available books found.
+        </p>
+
+        {% if not books|selectattr('status', 'equalto', 'Available')|list %}
+            <p>No available books.</p>
+        {% endif %}
+    </section>
+
+    <section class="card">
+        <h2>📕 Issued Books</h2>
+
+        <input type="text" id="searchIssued"
+               placeholder="Search issued books...">
+
+        <ul id="issuedList">
+            {% for book in books %}
+                {% if book['status'] == 'Issued' %}
+                <li>
+                    <strong>{{ book['name'] }}</strong>
+                    — {{ book['author'] }}
+
+                    <p>Status: Issued</p>
+                    <p>Issued to: {{ book['issued_to'] }}</p>
+
+                    <form action="/return/{{ book['id'] }}" method="POST">
+                        <button type="submit">Return Book</button>
+                    </form>
+
+                    <form action="/delete/{{ book['id'] }}"
+                          method="POST" style="display:inline;">
+                        <button type="submit">Delete</button>
+                    </form>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+
+        <p id="noIssued" style="display:none;">
+            No issued books found.
+        </p>
+
+        {% if not books|selectattr('status', 'equalto', 'Issued')|list %}
+            <p>No issued books.</p>
+        {% endif %}
+    </section>
+</main>
+
+<script>
+function setupSearch(inputId, listId, messageId) {
+    const search = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+    const message = document.getElementById(messageId);
+
+    search.addEventListener("input", function () {
+        const filter = search.value.toLowerCase();
+        let visibleCount = 0;
+
+        list.querySelectorAll("li").forEach(function (item) {
+            const matches = item.textContent.toLowerCase().includes(filter);
+
+            item.style.display = matches ? "" : "none";
+
+            if (matches) {
+                visibleCount++;
+            }
+        });
+
+        message.style.display = visibleCount === 0 ? "" : "none";
+    });
+}
+
+setupSearch("searchAvailable", "availableList", "noAvailable");
+setupSearch("searchIssued", "issuedList", "noIssued");
+</script>
+
+</body>
+</html>
